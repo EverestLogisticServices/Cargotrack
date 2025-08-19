@@ -40,7 +40,7 @@
     .badges{margin-top:10px; display:flex; gap:10px; flex-wrap:wrap}
     .badge{background:#0b1327; color:#a5b4fc; border:1px solid #1f2a44; padding:6px 10px; border-radius:999px; font-size:.82rem; display:inline-flex; gap:8px; align-items:center}
 
-    .grid{display:grid; gap:18px; grid-template-columns: 1.2fr .8fr}
+    .grid{display:grid; gap:18px; grid-template-columns:1fr}
     @media (max-width: 900px){ .grid{grid-template-columns: 1fr} }
 
     .card{background:var(--card); border:1px solid #1e293b; border-radius:18px; padding:22px; box-shadow: 0 10px 30px rgba(0,0,0,.25)}
@@ -100,7 +100,7 @@
     .toast.show{display:flex}
     .toast .dot{width:10px;height:10px}
 
-    .side{display:grid; gap:18px}
+    .side{display:grid; gap:36px}
     .metric{
       background:var(--card); border:1px solid #1e293b; border-radius:18px; padding:18px
     }
@@ -108,6 +108,9 @@
     .kpi{font-weight:800; font-size:1.6rem}
     .muted{color:var(--muted)}
     .brand-logo img{ width:100%; height:100%; object-fit:contain; display:block; border-radius:12px }
+  /* Centrar el recuadro de búsqueda */
+  .grid > .card{ max-width:760px; width:100%; margin:0 auto }
+  .side{ max-width:760px; margin:0 auto }
 </style>
 </head>
 <body>
@@ -193,11 +196,6 @@
             <span class="muted">Servicios operativos</span>
           </div>
         </div>
-        <div class="metric">
-          <h3>Tiempo promedio de respuesta</h3>
-          <div class="kpi">&lt; 1.2 s</div>
-          <div class="muted">Mockup (demostración)
-          </div>
         </div>
       </aside>
     </div>
@@ -215,6 +213,9 @@
       { tracking: 'IM-998877', almacen: 'M-221', peso: '12.0 lb', estado: 'En almacén', ubicacion: 'Managua, NI', fecha: '2025-08-15 09:10' },
       { tracking: 'SEA-45021', almacen: 'B-017', peso: '52.3 lb', estado: 'Despachado', ubicacion: 'Puerto Corinto, NI', fecha: '2025-08-10 18:42' }
     ];
+
+    // URL de tu Web App (JSONP)
+    const API_URL = "https://script.google.com/macros/s/AKfycbyL54IEYlM-jJJiq50QQtf3dvHIihLWQT6BPUGdf709FiH3bsW-Pz1Mgr7myvFyU4kTIQ/exec";
 
     const form = document.getElementById('form');
     const q = document.getElementById('q');
@@ -256,13 +257,30 @@
           })
           .buscarTracking(term);
       } else {
-        // Fallback local: simula latencia de red y usa datos de ejemplo
-        setTimeout(() => {
-          const found = sample.filter(r => r.tracking.toUpperCase().includes(term.toUpperCase()));
-          render(found);
+        // Fallback: JSONP contra tu Web App /exec (sin necesidad de google.script.run)
+        const cbName = 'jsonpRender_' + Math.random().toString(36).slice(2);
+        let scriptEl;
+        const cleanup = () => {
           spin.style.display = 'none';
           hint.textContent = 'Ingresa tu código exactamente como aparece en tu recibo.';
-        }, 680);
+          if (scriptEl && scriptEl.parentNode) scriptEl.parentNode.removeChild(scriptEl);
+          try{ delete window[cbName]; }catch(_){}
+        };
+        window[cbName] = (api) => {
+          try {
+            if (api && api.ok && Array.isArray(api.results)) {
+              render(api.results);
+            } else {
+              render([]);
+            }
+          } finally { cleanup(); }
+        };
+        const url = API_URL + '?tracking=' + encodeURIComponent(term) + '&callback=' + cbName + '&_=' + Date.now();
+        scriptEl = document.createElement('script');
+        scriptEl.src = url;
+        scriptEl.onerror = () => { showToast('Error de conexión con la Web App.'); cleanup(); };
+        document.body.appendChild(scriptEl);
+      }, 680);
       }
     });
 
@@ -322,6 +340,7 @@
   </script>
 </body>
 </html>
+
 
 
 
