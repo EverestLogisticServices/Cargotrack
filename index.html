@@ -4,182 +4,144 @@
   <meta charset="utf-8" />
   <title>Rastreo de Envíos | Importa Fácil</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <style>
     :root{
-      /* Ajusta este valor para subir/bajar todo el contenido */
-      --top-space: 10px;      /* antes eran ~2rem; ahora mucho menos */
-      --card-max: 560px;
-      --brand: #2c3e50;
-      --primary: #3498db;
-      --primary-600: #2980b9;
-      --muted: #f5f6fa;
-      --result-bg: #eafaf0;
-      --result-border: #2ecc71;
+      --bg:#f5f6fa;--card:#fff;--text:#2c3e50;--muted:#64748b;
+      --pri:#3498db;--pri-hover:#2980b9;--ring:#93c5fd;
+      --ok:#10b981;--err:#ef4444;--info:#2563eb
     }
-
-    /* Layout base */
-    html, body { height: 100%; }
+    *{box-sizing:border-box}
+    html,body{height:100%}
     body{
-      font-family: Segoe UI, Arial, system-ui, -apple-system, sans-serif;
-      background: var(--muted);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: var(--top-space) 16px 24px;  /* <— menos padding arriba */
+      font-family:Segoe UI,system-ui,Arial,Helvetica,sans-serif;
+      background:var(--bg);
+      margin:0;
+      display:grid;
+      /* ⬇️ antes: place-items:center; */
+      place-items:start center;       /* arriba y centrado */
+      padding:1rem 2rem 2rem;         /* menos espacio arriba */
+      color:var(--text);
     }
+    .wrap{width:100%;max-width:640px}
+    .logo{display:block;margin:0 auto 1.25rem auto;max-width:220px;height:auto}
 
-    /* Logo centrado y más cercano al borde superior */
-    .logo{ max-width: 220px; margin: 6px auto 12px; display:block; }
-
-    /* Tarjeta principal */
     .card{
-      background:#fff;
-      border-radius: 14px;
-      padding: 22px;
-      box-shadow: 0 10px 28px rgba(0,0,0,.08);
-      width: 100%;
-      max-width: var(--card-max);
-      margin: 0 auto;              /* centrada horizontal */
+      background:var(--card);
+      border-radius:16px;
+      padding:1.5rem;
+      box-shadow:0 10px 30px rgba(0,0,0,.08);
+      border:1px solid rgba(2,6,23,.06);
     }
+    h2{margin:0 0 .5rem 0;text-align:center;font-weight:700}
+    p.helper{margin:.25rem 0 1rem 0;text-align:center;color:var(--muted);font-size:.95rem}
 
-    h2{ margin: 0 0 14px; text-align:center; color: var(--brand); }
+    .row{display:flex;gap:.75rem;align-items:center;margin-top:.5rem}
+    .row input{
+      flex:1; padding:.875rem 1rem; border:1px solid #d1d5db; border-radius:12px; font-size:1rem;
+      background:#fff; outline:none; transition:.15s border-color,.15s box-shadow;
+    }
+    .row input:focus{border-color:var(--ring); box-shadow:0 0 0 4px rgba(147,197,253,.35)}
+    .row button{
+      padding:.9rem 1.1rem; border:0; border-radius:12px; font-weight:600;
+      background:linear-gradient(180deg,var(--pri),#248bd1); color:#fff; cursor:pointer; min-width:120px;
+      transition:transform .05s ease, filter .15s ease;
+    }
+    .row button:active{transform:translateY(1px)}
+    .row button:hover{filter:brightness(1.05)}
 
-    /* Barra de búsqueda compacta */
-    .search{
-      display:flex; gap:10px; align-items:center;
-      margin: 6px 0 12px;
-    }
-    .search input{
-      flex:1;
-      padding: .80rem .95rem;
-      border:1px solid #d8dde6;
-      border-radius:10px;
-      font-size:1rem;
-      outline:none;
-      transition: box-shadow .2s, border-color .2s;
-      background:#fff;
-    }
-    .search input:focus{
-      border-color: #c5d7f5;
-      box-shadow: 0 0 0 3px rgba(52,152,219,.15);
-    }
-    .search button{
-      padding:.80rem 1.1rem;
-      background: var(--primary);
-      color:#fff; border:0; border-radius:10px;
-      font-size:1rem; cursor:pointer;
-      transition: background .2s, transform .05s;
-      white-space: nowrap;
-    }
-    .search button:hover{ background: var(--primary-600); }
-    .search button:active{ transform: translateY(1px); }
-
-    /* Resultados */
     #res{
-      margin-top: 10px;
-      padding: 14px 16px;
-      background:#ecf0f1;
-      border-radius:10px;
-      border-left:5px solid var(--primary);
-      font-size:1rem;
-      line-height:1.45;
+      margin-top:1rem;
+      border:1px dashed rgba(2,6,23,.12);
+      border-radius:12px;
+      padding:1rem 1.1rem;
+      background:#f8fafc;
+      font-size:.98rem;
+      word-break:break-word;
     }
-    /* Cuando hay match, úsamos un verde suave */
-    #res.ok{
-      background: var(--result-bg);
-      border-left-color: var(--result-border);
-    }
+    #res.ok{border:1px solid rgba(16,185,129,.35); background:#ecfdf5}
+    #res.err{border:1px solid rgba(239,68,68,.35); background:#fef2f2}
+    #res.info{border:1px solid rgba(37,99,235,.25); background:#eff6ff}
 
-    /* Responsive: en móviles, los controles ocupan toda la fila */
-    @media (max-width: 520px){
-      .search{ flex-direction: column; align-items: stretch; }
-      .search button{ width:100%; }
-    }
+    .spin{width:18px;height:18px;border:3px solid #1f2937;border-top-color:#60a5fa;border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:.6rem .5rem;text-align:left;border-bottom:1px solid #e5e7eb}
+    th{font-weight:700;color:#334155}
+    code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;background:#f1f5f9;padding:.1rem .35rem;border-radius:6px}
   </style>
 </head>
 <body>
-  <!-- Logo (base64, el tuyo actual) -->
-  <img class="logo" alt="Importa Fácil"
-       src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAjwAAAB/CAYAAADrXBhxAAAAAXNSR0IArs4c6QAAIABJREFUeF7t... (tu base64 aquí, el mismo que ya usas) ..." />
+  <div class="wrap">
+    <!-- deja tu misma cadena base64 aquí -->
+    <img class="logo" alt="Importa Fácil"
+         src="data:image/png;base64, AQUÍ_TU_MISMO_BASE64 " />
 
-  <div class="card">
-    <h2>Rastreo de Envíos</h2>
-
-    <div class="search">
-      <input id="trk" placeholder="Ej: DEL12345" />
-      <button onclick="buscar()">Buscar</button>
+    <div class="card">
+      <h2>Rastreo de Envíos</h2>
+      <div class="row">
+        <input id="trk" placeholder="Ej: DEL12345" />
+        <button onclick="buscar()">Buscar</button>
+      </div>
+      <div id="res" class="info"></div>
     </div>
-
-    <div id="res"></div>
   </div>
 
   <script>
-    // Tu URL /exec de Apps Script
     const API_URL = "https://script.google.com/macros/s/AKfycbyL54IEYlM-jJJiq50QQtf3dvHIihLWQT6BPUGdf709FiH3bsW-Pz1Mgr7myvFyU4kTIQ/exec";
     const $ = (q)=>document.querySelector(q);
 
-    // Enter para disparar búsqueda
     document.addEventListener('DOMContentLoaded', () => {
       const inp = $('#trk');
-      if (inp) inp.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') buscar();
-      });
+      if (inp) inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') buscar(); });
     });
 
     function buscar(){
-      const t = $('#trk').value.trim().toUpperCase();
+      const t = ($('#trk').value || '').trim().toUpperCase();
       const res = $('#res');
-      if(!t){ show(res, '⚠️ Ingresá un número de tracking.'); return; }
-      show(res, '🔎 Buscando...');
+      if(!t){
+        res.className = 'info';
+        res.innerHTML = '⚠️ Ingresá un número de tracking.';
+        return;
+      }
+      res.className = 'info';
+      res.innerHTML = '<div style="display:flex;align-items:center;gap:.6rem"><span class="spin"></span><span>Consultando…</span></div>';
 
-      // Limpia llamada anterior (si hubo)
       const old = document.getElementById('jsonp-call');
       if (old) old.remove();
 
-      // Arma URL con callback JSONP
+      window.mostrar = mostrar;
+
       const url = API_URL
         + '?tracking=' + encodeURIComponent(t)
         + '&ua=' + encodeURIComponent(navigator.userAgent || '')
         + '&ref=' + encodeURIComponent(document.referrer || location.origin || '')
         + '&callback=mostrar'
-        + '&_=' + Date.now(); // evita caché
+        + '&_=' + Date.now();
 
-      // Inyecta <script> JSONP para evitar CORS
       const s = document.createElement('script');
       s.id = 'jsonp-call';
       s.src = url;
-      s.onerror = () => { show(res, '❌ Error de conexión.'); };
+      s.onerror = () => { res.className = 'err'; res.textContent = '❌ Error de conexión.'; };
       document.body.appendChild(s);
     }
 
-    function show(node, html, ok=false){
-      node.classList.toggle('ok', ok);
-      node.innerHTML = html;
-    }
-
-    // Callback que Apps Script llamará: mostrar({ ok, found, results, notify })
     function mostrar(api){
       const d = $('#res');
       if (!api || !api.ok) {
-        show(d, '❌ Error en la API.');
+        d.className = 'err';
+        d.textContent = '❌ Error en la API.';
         return;
       }
       if (!api.results || !api.results.length) {
-        show(d, '❌ Envío no encontrado. Verificá el número.');
+        d.className = 'err';
+        d.innerHTML = '❌ Envío no encontrado. Verificá el número.';
         return;
       }
       const x = api.results[0];
-      const fechaTxt = x.fecha ? new Date(x.fecha).toLocaleString() : 'Sin fecha';
-      show(d, `
-        <p><strong>Tracking:</strong> ${x.tracking||''}</p>
-        <p><strong># de almacén:</strong> ${x.almacen||''}</p>
-        <p><strong>Peso:</strong> ${x.peso??''}</p>
-        <p><strong>Estado:</strong> ${x.estado||''}</p>
-        <p><strong>Ubicación:</strong> ${x.ubicacion||''}</p>
-        <p><strong>Fecha:</strong> ${fechaTxt}</p>
-      `, true);
-    }
-  </script>
-</body>
-</html>
-
+      d.className = 'ok';
+      d.innerHTML = `
+        <p><strong>Tracking:</strong> <code>${esc(x.tracking||'')}</code></p>
+        <p><strong># de almacén:</strong> ${esc(x.almacen||'')}</p>
+        <p
